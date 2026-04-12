@@ -1,24 +1,24 @@
 version: '3'
 
 services:
+
+#Filebrowser NAS------------
   filesys-nginx:
     image: nginx:alpine3.23-slim
     ports:
       - "1726:80"
     volumes:
       - /etc/letsencrypt/:/etc/letsencrypt/
-      - ./filesys/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./filesys/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     networks:
       - lab_filesys
 
   filesys:
     image: filebrowser/filebrowser:v2.63.1
-    ports:
-      - "1800:80"
     volumes:
       - /home/lab:/srv
       - ./filesys/db/:/database/
-      - ./filesys/config/settings.json:/config/settings.json
+      - ./filesys/config/settings.json:/config/settings.json:ro
       - ./filesys/log:/log
     environment:
       - FB_USERNAME=${FILEBROWSER_USERNAME}
@@ -28,13 +28,13 @@ services:
       - lab_filesys
     restart: unless-stopped
 
+
+#Model Routing ------------
   ollama_c1:
     image: ollama/ollama
     restart: unless-stopped
     volumes:
       - ollama_c1:/root/.ollama
-    ports:
-      - "11500:11434"
     networks:
         - lab_modelsrouter
   
@@ -43,16 +43,39 @@ services:
     restart: unless-stopped
     volumes:
       - ollama_c2:/root/.ollama
-    ports:
-      - "11501:11434"
     networks:
         - lab_modelsrouter
+
+  olla:
+    image: ghcr.io/thushan/olla:latest
+    restart: unless-stopped
+    ports:
+      - "40114:40114"
+    volumes:
+      - ./modelrouter/config/olla.yaml:/app/config.yaml:ro
+    networks:
+      - lab_modelsrouter
+    depends_on:
+      - ollama_c1
+      - ollama_c2
+
+  modelsrouter-nginx:
+    image: nginx:alpine3.23-slim
+    ports:
+      - "40000:80"
+    environment:
+      - MODELS_API=${MODELS_API}
+    volumes:
+      - /etc/letsencrypt/:/etc/letsencrypt/
+      - ./modelrouter/nginx/nginx.conf:/etc/nginx/nginx.conf.template:ro
+    command: /bin/sh -c "envsubst '$$MODELS_API' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
+    networks:
+      - lab_modelsrouter
 
 networks:
   lab_filesys:
     driver: bridge
   lab_modelsrouter:
-
 
 volumes:
   ollama_c1:

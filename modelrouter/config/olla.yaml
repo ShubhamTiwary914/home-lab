@@ -1,0 +1,21 @@
+server:
+  host: "0.0.0.0"
+  port: 40114
+
+proxy:
+  engine: "sherpa"
+  load_balancer: "round-robin"
+  connection_timeout: 10s
+  response_timeout: 120s
+
+discovery:
+  type: "static"
+  static:
+    endpoints:
+      - url: "http://ollama_c1:11434"
+        name: "ollama-c1"
+        type: "ollama"
+
+      - url: "http://ollama_c2:11434"
+        name: "ollama-c2"
+        type: "ollama"
