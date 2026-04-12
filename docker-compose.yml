@@ -1,0 +1,59 @@
+version: '3'
+
+services:
+  filesys-nginx:
+    image: nginx:alpine3.23-slim
+    ports:
+      - "1726:80"
+    volumes:
+      - /etc/letsencrypt/:/etc/letsencrypt/
+      - ./filesys/nginx/nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - lab_filesys
+
+  filesys:
+    image: filebrowser/filebrowser:v2.63.1
+    ports:
+      - "1800:80"
+    volumes:
+      - /home/lab:/srv
+      - ./filesys/db/:/database/
+      - ./filesys/config/settings.json:/config/settings.json
+      - ./filesys/log:/log
+    environment:
+      - FB_USERNAME=${FILEBROWSER_USERNAME}
+      - FB_PASSWORD=${FILEBROWSER_PASSWORD}
+    user: "1000:1000"
+    networks:
+      - lab_filesys
+    restart: unless-stopped
+
+  ollama_c1:
+    image: ollama/ollama
+    restart: unless-stopped
+    volumes:
+      - ollama_c1:/root/.ollama
+    ports:
+      - "11500:11434"
+    networks:
+        - lab_modelsrouter
+  
+  ollama_c2:
+    image: ollama/ollama
+    restart: unless-stopped
+    volumes:
+      - ollama_c2:/root/.ollama
+    ports:
+      - "11501:11434"
+    networks:
+        - lab_modelsrouter
+
+networks:
+  lab_filesys:
+    driver: bridge
+  lab_modelsrouter:
+
+
+volumes:
+  ollama_c1:
+  ollama_c2:
