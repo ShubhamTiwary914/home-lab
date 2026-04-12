@@ -72,10 +72,44 @@ services:
     networks:
       - lab_modelsrouter
 
+
+#Blog & Editor ------
+  blog-nginx:
+    image: nginx:alpine3.23-slim
+    ports:
+      - "5000:80"
+    volumes:
+      - /etc/letsencrypt/:/etc/letsencrypt/
+      - ./blog/nginx/main.conf:/etc/nginx/nginx.conf:ro
+      - ./blog/public/:/content
+    networks:
+      - lab_blogs
+
+  # blogEditor-nginx:
+  #   image: nginx:alpine3.23-slim
+  #   ports:
+  #     - "5010:80"
+  #   volumes:
+  #     - /etc/letsencrypt/:/etc/letsencrypt/
+  #     - ./blog/nginx/editor.conf:/etc/nginx/nginx.conf:ro
+  #   networks:
+  #     - lab_blogs
+
+  # blogEditor:
+  #   image: ghcr.io/silverbulletmd/silverbullet:latest
+  #   restart: unless-stopped
+  #   environment:
+  #     - SB_USER=${SILVERBULLET_USERNAME}:${SILVERBULLET_PASSWORD}
+  #   volumes:
+  #     - ./blog/content:/space
+  #   networks:
+  #       - lab_blogs
+  
 networks:
   lab_filesys:
     driver: bridge
   lab_modelsrouter:
+  lab_blogs:
 
 volumes:
   ollama_c1:
