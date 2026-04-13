@@ -10,16 +10,18 @@ disablePathToLower = true
 [markup.goldmark.renderHooks.link]
 	useEmbedded = 'always'
 
+[markup.goldmark.extensions.extras.alert]
+	enable = true
+
 [params]
 	#show TOC of content/posts
-	Toc = false
-	# TocTitle = "Table of Contents"
+	Toc = true 
+	TocTitle = "Table of Contents"
 	contentTypeName = "posts"
-	
-	fullWidthTheme = false
+	readingTime = false
+	fullWidthTheme = false 
 	#use `cover.(jpg|png|webp)` as cover
 	autoCover = true
-
 	dateFormat = "2006-01-02 3:04:06 PM UTC"
 	
 	[render_hooks]
