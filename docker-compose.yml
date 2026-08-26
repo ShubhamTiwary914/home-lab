@@ -29,50 +29,6 @@ services:
     restart: unless-stopped
 
 
-#Model Routing ------------
-  ollama_c1:
-    image: ollama/ollama
-    restart: unless-stopped
-    volumes:
-      - ollama_c1:/root/.ollama
-    networks:
-        - lab_modelsrouter
-  
-  ollama_c2:
-    image: ollama/ollama
-    restart: unless-stopped
-    volumes:
-      - ollama_c2:/root/.ollama
-    networks:
-        - lab_modelsrouter
-
-  olla:
-    image: ghcr.io/thushan/olla:latest
-    restart: unless-stopped
-    ports:
-      - "40114:40114"
-    volumes:
-      - ./modelrouter/config/olla.yaml:/app/config.yaml:ro
-    networks:
-      - lab_modelsrouter
-    depends_on:
-      - ollama_c1
-      - ollama_c2
-
-  modelsrouter-nginx:
-    image: nginx:alpine3.23-slim
-    ports:
-      - "40000:80"
-    environment:
-      - MODELS_API=${MODELS_API}
-    volumes:
-      - /etc/letsencrypt/:/etc/letsencrypt/
-      - ./modelrouter/nginx/nginx.conf:/etc/nginx/nginx.conf.template:ro
-    command: /bin/sh -c "envsubst '$$MODELS_API' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
-    networks:
-      - lab_modelsrouter
-
-
 #Blog & Editor ------
   blog-nginx:
     image: nginx:alpine3.23-slim
@@ -85,32 +41,52 @@ services:
     networks:
       - lab_blogs
 
-  # blogEditor-nginx:
-  #   image: nginx:alpine3.23-slim
-  #   ports:
-  #     - "5010:80"
-  #   volumes:
-  #     - /etc/letsencrypt/:/etc/letsencrypt/
-  #     - ./blog/nginx/editor.conf:/etc/nginx/nginx.conf:ro
-  #   networks:
-  #     - lab_blogs
+  #port: 3000
+  analytics:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    environment:
+      DATABASE_URL: postgresql://umami:umami@lab_db:5432/umami
+      APP_SECRET:  ${UMAMI_APP_SECRET}
+    depends_on:
+      - lab_db
+    restart: unless-stopped
+    networks:
+      - lab_blogs
 
-  # blogEditor:
-  #   image: ghcr.io/silverbulletmd/silverbullet:latest
-  #   restart: unless-stopped
-  #   environment:
-  #     - SB_USER=${SILVERBULLET_USERNAME}:${SILVERBULLET_PASSWORD}
-  #   volumes:
-  #     - ./blog/content:/space
-  #   networks:
-  #       - lab_blogs
-  
+  analytics-nginx:
+    image: nginx:alpine3.23-slim
+    ports:
+      - "3001:80"
+    volumes:
+      - /etc/letsencrypt/:/etc/letsencrypt/
+      - ./analytics/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - lab_blogs
+
+
+#Shared DB------
+  lab_db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: umami
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: umami
+    volumes:
+      - lab_db:/var/lib/postgresql/data
+    restart: unless-stopped 
+    networks:
+      - lab_blogs
+
+
 networks:
   lab_filesys:
     driver: bridge
-  lab_modelsrouter:
   lab_blogs:
+  dbnet:
+    driver: bridge
+
 
 volumes:
-  ollama_c1:
-  ollama_c2:
+  lab_db:
+  postgres_data:
+  mysql_data:

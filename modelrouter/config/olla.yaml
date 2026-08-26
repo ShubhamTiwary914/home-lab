@@ -19,3 +19,7 @@ discovery:
       - url: "http://ollama_c2:11434"
         name: "ollama-c2"
         type: "ollama"
+
+      - url: "http://ollama_c3:11434"
+        name: "ollama-c3"
+        type: "ollama"
