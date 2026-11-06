@@ -1,0 +1,25 @@
+---
+export const prerender = true;
+import Layout from "../layouts/Layout.astro";
+import HomePage from "@/components/HomePage";
+import { DATA } from "@/data/resume";
+import type { ContributionData, ContributionDay } from "@/components/section/contributions-section";
+
+interface ContributionApiResponse {
+  total: { lastYear: number };
+  contributions: ContributionDay[];
+}
+
+let contributions: ContributionData = { total: 0, days: [] };
+try {
+  const res = await fetch(`https://github-contributions-api.jogruber.de/v4/${DATA.sections.contributions.username}?y=last`);
+  if (res.ok) {
+    const json: ContributionApiResponse = await res.json();
+    contributions = { total: json.total.lastYear, days: json.contributions };
+  }
+} catch {}
+---
+
+<Layout>
+  <HomePage client:only="react" contributions={contributions} />
+</Layout>

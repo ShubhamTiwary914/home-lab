@@ -41,6 +41,19 @@ services:
     networks:
       - lab_blogs
 
+# CV page
+  portfolio-nginx:
+    image: nginx:alpine3.23-slim
+    ports:
+      - "5020:80"
+    volumes:
+      - /etc/letsencrypt/:/etc/letsencrypt/
+      - ./portfolio/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./portfolio/public/:/content
+    networks:
+      - lab_blogs
+
+# Analytics -----
   #port: 3000
   analytics:
     image: ghcr.io/umami-software/umami:postgresql-latest
